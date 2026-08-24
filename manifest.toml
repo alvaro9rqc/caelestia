@@ -23,6 +23,26 @@ src = "hypr"
 dest = "$XDG_CONFIG_HOME/hypr"
 
 [[components]]
+name = "personal"
+default = true
+packages = ["hyprmod"]
+[[components.entries]]
+src = "personal/caelestia/cli.json"
+dest = "$XDG_CONFIG_HOME/caelestia/cli.json"
+[[components.entries]]
+src = "personal/caelestia/hypr-vars.lua"
+dest = "$XDG_CONFIG_HOME/caelestia/hypr-vars.lua"
+[[components.entries]]
+src = "personal/caelestia/hypr-user.lua"
+dest = "$XDG_CONFIG_HOME/caelestia/hypr-user.lua"
+[[components.entries]]
+src = "personal/caelestia/templates"
+dest = "$XDG_CONFIG_HOME/caelestia/templates"
+[[components.entries]]
+src = "personal/bin"
+dest = "$HOME/.local/bin"
+
+[[components]]
 name = "fish"
 default = true
 packages = ["fish", "eza", "zoxide", "direnv"]

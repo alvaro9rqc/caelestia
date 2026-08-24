@@ -1,0 +1,22 @@
+{
+  "dots": {
+    "url": "https://github.com/alvaro9rqc/caelestia.git",
+    "branch": "personal"
+  },
+  "theme": {
+    "enableTerm": true,
+    "postHook": "$HOME/dotfiles/scripts/caelestia-theme-reload"
+  },
+  "toggles": {
+    "todo": {
+      "notion": {
+        "enable": true,
+        "desktop": "notion",
+        "move": true
+      },
+      "todoist": {
+        "enable": false
+      }
+    }
+  }
+}

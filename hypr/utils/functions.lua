@@ -92,6 +92,7 @@ end
 local home       = os.getenv("HOME")
 local config_dir = os.getenv("XDG_CONFIG_HOME") or (home .. "/.config")
 local json       = require("utils.json") -- rxi's peak library
+local desktop    = require("utils.desktop")
 
 -- Default config
 local function default_config()
@@ -221,7 +222,7 @@ local function load_toggle_config()
             shell_join({ "Failed to parse CLI config", reason }) .. " error")
     end
 
-    return config
+    return desktop.resolve(config)
 end
 
 -- Ensure every configured app is present on the special workspace: spawn it if
