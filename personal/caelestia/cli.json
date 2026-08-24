@@ -12,6 +12,16 @@
       "notion": {
         "enable": true,
         "desktop": "notion",
+        "match": [
+          {
+            "initialTitle": "Notion"
+          }
+        ],
+        "command": [
+          "caelestia-desktop",
+          "launch",
+          "notion"
+        ],
         "move": true
       },
       "todoist": {
