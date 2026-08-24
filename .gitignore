@@ -11,3 +11,6 @@
 /fish/conf.d/
 
 .SRCINFO
+
+# Machine-local desktop application bindings
+/personal/caelestia/desktop-apps.local.json

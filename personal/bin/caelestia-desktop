@@ -1,0 +1,195 @@
+#!/usr/bin/env python3
+"""Bind friendly Caelestia aliases to freedesktop application entries."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+
+def config_home() -> Path:
+    return Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+
+
+def data_dirs() -> list[Path]:
+    user = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
+    system = os.environ.get("XDG_DATA_DIRS", "/usr/local/share:/usr/share")
+    return [user, *(Path(item) for item in system.split(":") if item)]
+
+
+def registry_path() -> Path:
+    return config_home() / "caelestia/desktop-apps.local.json"
+
+
+def read_registry() -> dict[str, str]:
+    path = registry_path()
+    try:
+        data = json.loads(path.read_text())
+    except FileNotFoundError:
+        return {}
+    except (OSError, json.JSONDecodeError) as error:
+        fail(f"Cannot read {path}: {error}")
+
+    if not isinstance(data, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in data.items()):
+        fail(f"{path} must contain an object whose keys and values are strings")
+    return data
+
+
+def write_registry(data: dict[str, str]) -> None:
+    path = registry_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile("w", dir=path.parent, delete=False) as output:
+        json.dump(dict(sorted(data.items())), output, indent=2)
+        output.write("\n")
+        temporary = Path(output.name)
+    temporary.chmod(0o600)
+    temporary.replace(path)
+
+
+def desktop_files() -> list[Path]:
+    found: dict[Path, Path] = {}
+    for base in data_dirs():
+        applications = base / "applications"
+        if not applications.is_dir():
+            continue
+        for path in applications.rglob("*.desktop"):
+            found.setdefault(path.resolve(), path)
+    return sorted(found, key=lambda path: str(path).lower())
+
+
+def desktop_values(path: Path) -> dict[str, str]:
+    values: dict[str, str] = {}
+    in_entry = False
+    try:
+        lines = path.read_text(errors="replace").splitlines()
+    except OSError:
+        return values
+
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            if in_entry:
+                break
+            in_entry = stripped == "[Desktop Entry]"
+        elif in_entry and "=" in line:
+            key, value = line.split("=", 1)
+            values.setdefault(key.strip(), value.strip())
+    return values
+
+
+def resolve_desktop(value: str) -> Path | None:
+    candidate = Path(value).expanduser()
+    if candidate.is_absolute() and candidate.is_file():
+        return candidate.resolve()
+
+    for base in data_dirs():
+        candidate = base / "applications" / value
+        if candidate.is_file():
+            return candidate.resolve()
+    return None
+
+
+def choose_desktop(alias: str) -> Path:
+    if shutil.which("fuzzel") is None:
+        fail("fuzzel is required for interactive desktop selection")
+
+    choices: list[tuple[str, Path]] = []
+    for path in desktop_files():
+        values = desktop_values(path)
+        if values.get("NoDisplay", "").lower() == "true":
+            continue
+        name = values.get("Name", path.stem)
+        relative = next(
+            (str(path.relative_to(base / "applications")) for base in data_dirs() if path.is_relative_to(base / "applications")),
+            path.name,
+        )
+        choices.append((f"{name}  [{relative}]", path))
+
+    if not choices:
+        fail("No desktop applications were found")
+
+    result = subprocess.run(
+        ["fuzzel", "--dmenu", f"--prompt=Bind {alias} > "],
+        input="\n".join(label for label, _ in choices) + "\n",
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0 or not result.stdout.strip():
+        raise SystemExit(result.returncode or 1)
+
+    selected = result.stdout.rstrip("\n")
+    for label, path in choices:
+        if label == selected:
+            return path.resolve()
+    fail("The selected desktop application is no longer available")
+
+
+def bind(alias: str, value: str | None) -> Path:
+    path = resolve_desktop(value) if value else choose_desktop(alias)
+    if path is None:
+        fail(f"Desktop application not found: {value}")
+
+    registry = read_registry()
+    registry[alias] = str(path)
+    write_registry(registry)
+
+    if shutil.which("hyprctl"):
+        subprocess.run(["hyprctl", "reload"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+    return path
+
+
+def launch(alias: str) -> None:
+    path = resolve_desktop(read_registry().get(alias, ""))
+    if path is None:
+        path = bind(alias, None)
+    result = subprocess.run(["gio", "launch", str(path)], check=False)
+    if result.returncode:
+        fail(f"Failed to launch {path}", result.returncode)
+
+
+def fail(message: str, status: int = 1) -> None:
+    print(f"caelestia-desktop: {message}", file=sys.stderr)
+    if shutil.which("notify-send"):
+        subprocess.run(["notify-send", "Caelestia desktop application", message], check=False)
+    raise SystemExit(status)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+
+    bind_parser = commands.add_parser("bind", help="bind an alias using fuzzel or an explicit desktop file")
+    bind_parser.add_argument("alias")
+    bind_parser.add_argument("desktop", nargs="?")
+
+    launch_parser = commands.add_parser("launch", help="launch a bound alias, binding it first when necessary")
+    launch_parser.add_argument("alias")
+
+    commands.add_parser("list", help="list current bindings")
+
+    unbind_parser = commands.add_parser("unbind", help="remove an alias binding")
+    unbind_parser.add_argument("alias")
+
+    args = parser.parse_args()
+    if args.command == "bind":
+        print(bind(args.alias, args.desktop))
+    elif args.command == "launch":
+        launch(args.alias)
+    elif args.command == "list":
+        for alias, path in sorted(read_registry().items()):
+            print(f"{alias} -> {path}")
+    elif args.command == "unbind":
+        registry = read_registry()
+        registry.pop(args.alias, None)
+        write_registry(registry)
+
+
+if __name__ == "__main__":
+    main()
