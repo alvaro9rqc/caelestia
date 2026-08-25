@@ -13,5 +13,6 @@ pcall(require, "hyprland-gui")
 
 -- Keep Notion on the todo workspace even when launched outside the toggle.
 desktop.window_rule("notion", "special:todo")
+desktop.window_rule("whatsapp", "special:communication")
 
 hl.bind("SUPER + SHIFT + P", hl.dsp.exec_cmd("hyprmod profile next"))
