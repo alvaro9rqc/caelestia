@@ -27,6 +27,13 @@
       "todoist": {
         "enable": false
       }
+    },
+    "communication": {
+      "whatsapp": {
+        "enable": true,
+        "desktop": "whatsapp",
+        "move": true
+      }
     }
   }
 }
