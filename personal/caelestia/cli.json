@@ -5,7 +5,7 @@
   },
   "theme": {
     "enableTerm": true,
-    "postHook": "$HOME/dotfiles/scripts/caelestia-theme-reload"
+    "postHook": "$HOME/.local/bin/caelestia-theme-reload"
   },
   "toggles": {
     "todo": {
