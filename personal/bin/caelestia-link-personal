@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+
+FORK_DIR="$HOME/forks/caelestia/personal/caelestia"
+TARGET_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/caelestia"
+
+mkdir -p "$TARGET_DIR"
+
+ln -sfn "$FORK_DIR/hypr-user.lua" "$TARGET_DIR/hypr-user.lua"
+ln -sfn "$FORK_DIR/hypr-vars.lua" "$TARGET_DIR/hypr-vars.lua"
+ln -sfn "$FORK_DIR/cli.json" "$TARGET_DIR/cli.json"
+
+if [ -d "$FORK_DIR/templates" ]; then
+    ln -sfn "$FORK_DIR/templates" "$TARGET_DIR/templates"
+fi
