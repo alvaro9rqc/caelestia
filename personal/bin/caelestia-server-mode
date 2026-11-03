@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cmd="${1:-toggle}"
+
+case "$cmd" in
+    on|enable)
+        quickshell ipc -c caelestia call serverMode enable
+        ;;
+    off|disable)
+        quickshell ipc -c caelestia call serverMode disable
+        ;;
+    toggle)
+        quickshell ipc -c caelestia call serverMode toggle
+        ;;
+    status|is-enabled)
+        state=$(quickshell ipc -c caelestia call serverMode isEnabled 2>/dev/null || echo "false")
+        if [[ "$state" == "true" ]]; then
+            echo "Server mode: enabled"
+            exit 0
+        else
+            echo "Server mode: disabled"
+            exit 1
+        fi
+        ;;
+    *)
+        echo "Usage: $0 [on|off|toggle|status]"
+        exit 1
+        ;;
+esac
