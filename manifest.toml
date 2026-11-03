@@ -32,6 +32,12 @@ dest = "$XDG_CONFIG_HOME/hypr"
 name = "personal"
 default = true
 packages = ["hyprmod"]
+post_install = [
+    "sh $HOME/.local/bin/caelestia-link-personal"
+]
+post_update = [
+    "sh $HOME/.local/bin/caelestia-link-personal"
+]
 [[components.entries]]
 src = "personal/caelestia/cli.json"
 dest = "$XDG_CONFIG_HOME/caelestia/cli.json"
