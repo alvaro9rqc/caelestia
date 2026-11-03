@@ -21,6 +21,6 @@ hl.bind("SUPER + SHIFT + P", hl.dsp.exec_cmd("hyprmod profile next"))
 -- Lock session and turn off screen on CTRL + Escape (waits for lock animation to settle before DPMS off)
 hl.bind("CTRL + Escape", function()
     hl.dispatch(hl.dsp.global("caelestia:lock"))
-    hl.dispatch(hl.dsp.exec_cmd("sh -c 'sleep 0.8 && hyprctl dispatch dpms off'"))
+    hl.dispatch(hl.dsp.exec_cmd("caelestia-lock-screen"))
 end)
 

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Wait for Caelestia lockscreen animation to settle before turning off display
+sleep 0.8
+hyprctl eval 'hl.dispatch(hl.dsp.dpms({ action = "disable" }))'
