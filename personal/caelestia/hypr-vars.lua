@@ -4,7 +4,7 @@ return {
 
     -- System & Session
     kbSleep                = "SUPER + Escape",
-    kbLock                 = "CTRL + Escape",
+    kbLock                 = "", -- Bound in hypr-user.lua to lock + dpms off
     kbRestoreLock          = "CTRL + SUPER + ALT + L",
     kbShowPanels           = "CTRL + SUPER + P",
 

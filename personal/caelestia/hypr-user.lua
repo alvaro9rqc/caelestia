@@ -17,3 +17,10 @@ desktop.window_rule("notion", "special:todo")
 desktop.window_rule("whatsapp", "special:communication")
 
 hl.bind("SUPER + SHIFT + P", hl.dsp.exec_cmd("hyprmod profile next"))
+
+-- Lock session and turn off screen on CTRL + Escape (wakes immediately on user interaction)
+hl.bind("CTRL + Escape", function()
+    hl.dispatch(hl.dsp.global("caelestia:lock"))
+    hl.dispatch(hl.dsp.dpms("off"))
+end)
+
