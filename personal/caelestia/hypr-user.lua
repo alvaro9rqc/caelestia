@@ -27,41 +27,25 @@ end)
 ------------------------------------------------------------------------
 -- Monitor-Aware Independent Workspaces
 ------------------------------------------------------------------------
--- Anchor workspaces 11..20 to the external monitor (HDMI-A-1)
+-- Strict monitor workspace rules:
+-- Laptop display (eDP-1): workspaces 1..10
+for i = 1, 10 do
+    hl.workspace_rule({ workspace = tostring(i), monitor = "eDP-1", default = (i == 1) })
+end
+
+-- External monitor (HDMI-A-1): workspaces 11..20
 for i = 11, 20 do
     hl.workspace_rule({ workspace = tostring(i), monitor = "HDMI-A-1", default = (i == 11) })
 end
 
 -- Determine workspace offset based on the active monitor:
--- If only 1 monitor is active (laptop alone OR docked with lid closed): offset = 0 (workspaces 1..10)
--- If dual monitors (laptop eDP-1 + external):
---   - eDP-1: offset = 0 (workspaces 1..10)
---   - External monitor: offset = 10 (workspaces 11..20)
+-- Laptop (eDP-1): offset 0 (workspaces 1..10)
+-- External (HDMI-A-1): offset 10 (workspaces 11..20)
 local function get_active_monitor_offset()
-    local mons = hl.get_monitors()
-    if #mons <= 1 then
-        return 0
-    end
-
     local active_mon = hl.get_active_monitor()
-    if not active_mon then
+    if not active_mon or active_mon.name == "eDP-1" then
         return 0
     end
-
-    if active_mon.name == "eDP-1" then
-        return 0
-    end
-
-    local ext_index = 1
-    for _, m in ipairs(mons) do
-        if m.name ~= "eDP-1" then
-            if m.name == active_mon.name then
-                return ext_index * 10
-            end
-            ext_index = ext_index + 1
-        end
-    end
-
     return 10
 end
 
@@ -133,16 +117,32 @@ local function smart_cycle_move(step)
     end
 end
 
--- Cycle relative workspaces on current monitor
+-- Cycle relative workspaces on current monitor (Arrows + Vim HJKL + Mouse wheel + Page Up/Down)
 hl.bind("CTRL + SUPER + Left", smart_cycle_ws(-1), { repeating = true })
 hl.bind("CTRL + SUPER + Right", smart_cycle_ws(1), { repeating = true })
 hl.bind("CTRL + SUPER + H", smart_cycle_ws(-1), { repeating = true })
 hl.bind("CTRL + SUPER + L", smart_cycle_ws(1), { repeating = true })
+hl.bind("SUPER + mouse_up", smart_cycle_ws(-1))
+hl.bind("SUPER + mouse_down", smart_cycle_ws(1))
+hl.bind("SUPER + Page_Up", smart_cycle_ws(-1))
+hl.bind("SUPER + Page_Down", smart_cycle_ws(1))
 
+-- Move window across relative workspaces on current monitor
 hl.bind("CTRL + SUPER + SHIFT + Left", smart_cycle_move(-1), { repeating = true })
 hl.bind("CTRL + SUPER + SHIFT + Right", smart_cycle_move(1), { repeating = true })
 hl.bind("CTRL + SUPER + SHIFT + H", smart_cycle_move(-1), { repeating = true })
 hl.bind("CTRL + SUPER + SHIFT + L", smart_cycle_move(1), { repeating = true })
+hl.bind("SUPER + ALT + mouse_up", smart_cycle_move(-1))
+hl.bind("SUPER + ALT + mouse_down", smart_cycle_move(1))
+hl.bind("SUPER + ALT + Page_Up", smart_cycle_move(-1))
+hl.bind("SUPER + ALT + Page_Down", smart_cycle_move(1))
+
+-- Special workspace transfer (Vim + Arrows)
+hl.bind("SUPER + ALT + S", hl.dsp.window.move({ workspace = "special:special" }))
+hl.bind("CTRL + SUPER + SHIFT + Up", hl.dsp.window.move({ workspace = "special:special" }))
+hl.bind("CTRL + SUPER + SHIFT + K", hl.dsp.window.move({ workspace = "special:special" }))
+hl.bind("CTRL + SUPER + SHIFT + Down", hl.dsp.window.move({ workspace = "e+0" }))
+hl.bind("CTRL + SUPER + SHIFT + J", hl.dsp.window.move({ workspace = "e+0" }))
 
 -- Cross-monitor navigation & window transfer (SUPER + O / SUPER + SHIFT + O)
 hl.bind("SUPER + O", hl.dsp.focus({ monitor = "+1" }))
