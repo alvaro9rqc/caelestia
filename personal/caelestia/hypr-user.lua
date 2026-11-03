@@ -6,6 +6,7 @@ hl.config({ input = { kb_options = "compose:menu" } })
 -- Vim-style directional focus.
 for key, direction in pairs({ H = "left", J = "down", K = "up", L = "right" }) do
     hl.bind("SUPER + " .. key, hl.dsp.focus({ direction = direction }))
+    hl.bind("SUPER + SHIFT + " .. key, hl.dsp.window.move({ direction = direction }))
 end
 
 -- HyprMod generates this file. It is optional during the first installation.
