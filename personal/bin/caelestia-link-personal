@@ -20,4 +20,7 @@ mkdir -p "$BIN_TARGET_DIR"
 if [ -f "$BIN_FORK_DIR/caelestia-server-mode" ]; then
     ln -sfn "$BIN_FORK_DIR/caelestia-server-mode" "$BIN_TARGET_DIR/caelestia-server-mode"
 fi
+if [ -f "$BIN_FORK_DIR/caelestia-lock-screen" ]; then
+    ln -sfn "$BIN_FORK_DIR/caelestia-lock-screen" "$BIN_TARGET_DIR/caelestia-lock-screen"
+fi
 
